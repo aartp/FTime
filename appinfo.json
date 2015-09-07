@@ -1,0 +1,22 @@
+{
+  "uuid": "e852f27a-35de-42ab-a95e-a1cf756ea3ac",
+  "shortName": "FTime",
+    "longName": "FTime",
+  "companyName": "Pine tree corp.",
+  "versionLabel": "1.0",
+  "sdkVersion": "3",
+  "targetPlatforms": ["aplite", "basalt"],
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {},
+  "resources": {
+    "media": [
+              {
+              "type": "font",
+              "name": "ASR_FONT_24",
+              "file": "ar.ttf"
+              }
+      ]
+  }
+}
