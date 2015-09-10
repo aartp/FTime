@@ -4,6 +4,7 @@ static Window *_mainWindow;
 static TextLayer *_timeLayer;
 static TextLayer *_dateLayer;
 static TextLayer *_batteryLayer;
+static TextLayer *_yearTimeLayer;
 static GFont _asrFont;
 
 static void update_battery(BatteryChargeState charge_state){
@@ -23,16 +24,29 @@ static void update_time(){
 	
 	static char time_buffer[] = "00:00";
     static char date_buffer[40];
+    static char year_buffer[100];
 	strftime(time_buffer, sizeof(time_buffer), "%H:%M", tick_time);
     strftime(date_buffer, sizeof(date_buffer), "%d/%m/%Y %a", tick_time);
+    strftime(year_buffer, sizeof(year_buffer), "week %V day %j", tick_time);
 	
 	text_layer_set_text(_timeLayer, time_buffer);
     text_layer_set_text(_dateLayer, date_buffer);
+    text_layer_set_text(_yearTimeLayer, year_buffer);
 }
 
 static void tick_handler(struct tm *tickTime, TimeUnits unitsChanged) {
 	update_time();
     update_battery(battery_state_service_peek());
+}
+
+static void draw_std_layer(GFont layerFont, TextLayer *layerToDraw, Window *window){
+    text_layer_set_background_color(layerToDraw, GColorClear);
+    text_layer_set_text_color(layerToDraw, GColorBlack);
+    text_layer_set_text(layerToDraw, "loading...");
+    text_layer_set_font(layerToDraw, layerFont);
+    text_layer_set_text_alignment(layerToDraw, GTextAlignmentCenter);
+    
+    layer_add_child(window_get_root_layer(window), text_layer_get_layer(layerToDraw));
 }
 
 static void main_window_load(Window *window){
@@ -42,35 +56,22 @@ static void main_window_load(Window *window){
 	
     //time
 	_timeLayer = text_layer_create(GRect(0, 10, bounds.size.w, 50));
-	text_layer_set_background_color(_timeLayer, GColorClear);
-	text_layer_set_text_color(_timeLayer, GColorBlack);
-	text_layer_set_text(_timeLayer, "00:00");
-    text_layer_set_font(_timeLayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
-    text_layer_set_text_alignment(_timeLayer, GTextAlignmentCenter);
+    draw_std_layer(fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD), _timeLayer, window);
     
     //date
-    _dateLayer = text_layer_create(GRect(0, 70, bounds.size.w, 40));
-    text_layer_set_background_color(_dateLayer, GColorClear);
-    text_layer_set_text_color(_dateLayer, GColorBlack);
-    text_layer_set_text(_dateLayer, "loading...");
-//    text_layer_set_font(_dateLayer, _asrFont);
-    text_layer_set_font(_dateLayer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(_dateLayer, GTextAlignmentCenter);
+    _dateLayer = text_layer_create(GRect(0, 60, bounds.size.w, 40));
+    draw_std_layer(fonts_get_system_font(FONT_KEY_GOTHIC_18), _dateLayer, window);
     
+    //year time
+    _yearTimeLayer = text_layer_create(GRect(0, 100, bounds.size.w, 40));
+    draw_std_layer(fonts_get_system_font(FONT_KEY_GOTHIC_18), _yearTimeLayer, window);
+
     //battery
-    _batteryLayer = text_layer_create(GRect(0, 120, bounds.size.w, 40));
-    text_layer_set_background_color(_batteryLayer, GColorClear);
-    text_layer_set_text_color(_batteryLayer, GColorBlack);
-    text_layer_set_font(_batteryLayer, fonts_get_system_font(FONT_KEY_GOTHIC_18));
-    text_layer_set_text_alignment(_batteryLayer, GTextAlignmentCenter);
-    text_layer_set_text(_batteryLayer, "loading...");
+    _batteryLayer = text_layer_create(GRect(0, 140, bounds.size.w, 40));
+    draw_std_layer(fonts_get_system_font(FONT_KEY_GOTHIC_18), _batteryLayer, window);
 	
     tick_timer_service_subscribe(MINUTE_UNIT, tick_handler);
     battery_state_service_subscribe(update_battery);
-    
-	layer_add_child(window_get_root_layer(window), text_layer_get_layer(_timeLayer));
-    layer_add_child(window_get_root_layer(window), text_layer_get_layer(_dateLayer));
-    layer_add_child(window_get_root_layer(window), text_layer_get_layer(_batteryLayer));
 }
 
 static void main_window_unload(Window *window){
